@@ -6,10 +6,45 @@ import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+import json as _json
+
 import streamlit as st
+import streamlit.components.v1 as components
 from dotenv import load_dotenv
 
 load_dotenv()
+
+
+def copy_button(text: str, key: str, label: str = "📋 העתק למייל") -> None:
+    """Render a small button that copies `text` to the clipboard via the browser's Clipboard API."""
+    safe = _json.dumps(text or "")
+    btn_id = f"copyBtn_{key}"
+    components.html(f"""
+    <div style="text-align: right; direction: rtl; padding: 4px 0;">
+        <button id="{btn_id}" style="background:#1f6feb;color:white;border:none;
+            padding:8px 18px;border-radius:6px;cursor:pointer;font-size:14px;
+            font-weight:600;font-family:inherit;">
+            {label}
+        </button>
+        <script>
+            (function() {{
+                const btn = document.getElementById("{btn_id}");
+                const text = {safe};
+                btn.addEventListener("click", () => {{
+                    navigator.clipboard.writeText(text).then(() => {{
+                        const orig = btn.innerText;
+                        btn.innerText = "✅ הועתק";
+                        btn.style.background = "#1a7f37";
+                        setTimeout(() => {{
+                            btn.innerText = orig;
+                            btn.style.background = "#1f6feb";
+                        }}, 2000);
+                    }});
+                }});
+            }})();
+        </script>
+    </div>
+    """, height=55)
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
@@ -430,7 +465,10 @@ with tab_draft:
                 st.session_state.draft_id = None
 
     if st.session_state.draft:
-        # Translation toolbar (right above the draft so it's the first thing the user sees)
+        # Copy button — primary action since user often wants to email the result
+        copy_button(st.session_state.draft, key=f"main_{st.session_state.draft_id or 'live'}")
+
+        # Translation toolbar
         current_lang = st.session_state.draft_lang
         target_lang = "English" if current_lang == "עברית" else "עברית"
         toolbar = st.columns([2, 2, 6])
@@ -575,6 +613,7 @@ with tab_history:
                 st.markdown(f"**בקשה מקורית:**")
                 st.write(d["user_request"])
                 st.markdown("**טיוטה:**")
+                copy_button(d["draft_text"], key=f"hist_{d['id']}")
                 st.markdown(
                     f'<div class="draft-card">\n\n{d["draft_text"]}\n\n</div>',
                     unsafe_allow_html=True,
