@@ -90,18 +90,30 @@ code, pre, kbd, .stCode {
 }
 .stMarkdown a { unicode-bidi: plaintext; }
 
-/* Drafted procedure card: nicer visual treatment */
+/* Drafted procedure card: high contrast so text isn't washed out inside expanders */
 .draft-card {
-    background: #fafafa;
-    border: 1px solid #e0e0e0;
+    background: #ffffff;
+    color: #0d1117;
+    border: 1px solid #d0d7de;
     border-right: 4px solid #1f6feb;
     border-radius: 8px;
     padding: 1.25rem 1.5rem;
     margin: 1rem 0;
     direction: rtl;
     text-align: right;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    line-height: 1.6;
 }
-.draft-card h1, .draft-card h2, .draft-card h3 { margin-top: 1rem; color: #1a1a1a; }
+.draft-card * { color: #0d1117 !important; }
+.draft-card h1, .draft-card h2, .draft-card h3, .draft-card h4 {
+    margin-top: 1.1rem;
+    color: #0d1117 !important;
+    font-weight: 700;
+}
+.draft-card strong { color: #000 !important; font-weight: 700; }
+.draft-card a { color: #0969da !important; text-decoration: underline; }
+.draft-card p, .draft-card li { color: #0d1117 !important; font-size: 1rem; }
+.draft-card hr { border-color: #d0d7de; }
 
 /* Source card */
 .source-item {
@@ -329,15 +341,16 @@ def _check_password() -> bool:
     st.title("Clinical AI RegWatch")
     st.markdown("##### נדרשת סיסמה לכניסה")
 
-    def _on_submit():
-        entered = st.session_state.get("pw_input", "")
-        if hmac.compare_digest(entered, expected):
-            st.session_state.auth_ok = True
-            st.session_state.pop("pw_input", None)
-        else:
-            st.session_state.auth_ok = False
+    with st.form("login_form", clear_on_submit=False):
+        pw = st.text_input("סיסמה", type="password")
+        submit = st.form_submit_button("כניסה", type="primary", use_container_width=True)
+        if submit:
+            if hmac.compare_digest(pw, expected):
+                st.session_state.auth_ok = True
+                st.rerun()
+            else:
+                st.session_state.auth_ok = False
 
-    st.text_input("סיסמה", type="password", key="pw_input", on_change=_on_submit)
     if st.session_state.get("auth_ok") is False:
         st.error("סיסמה שגויה")
     return False
@@ -386,7 +399,10 @@ with tab_draft:
             key="custom_prompt",
         )
 
-    if st.button("✨ נסח נוהל", type="primary", disabled=not user_prompt.strip()):
+    if st.button("✨ נסח נוהל", type="primary"):
+        if not user_prompt.strip():
+            st.warning("יש להזין תיאור בקשה לפני הניסוח.")
+            st.stop()
         with st.spinner("מאחזר מקורות..."):
             try:
                 retrieved = semantic_search(user_prompt, limit=n_sources)
