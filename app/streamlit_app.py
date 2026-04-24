@@ -180,15 +180,29 @@ def fetch_recent(days: int = 7):
     cutoff = datetime.now(timezone.utc) - timedelta(days=days)
     sql = """
         select id, source, url, title, summary, why_care, category, region,
-               published_at, scraped_at
+               published_at, scraped_at, last_changed_at
           from documents
          where scraped_at >= %s
-         order by category, scraped_at desc
+            or last_changed_at >= %s
+         order by category, coalesce(last_changed_at, scraped_at) desc
     """
     with get_conn().cursor() as cur:
-        cur.execute(sql, (cutoff,))
+        cur.execute(sql, (cutoff, cutoff))
         cols = [d[0] for d in cur.description]
         return [dict(zip(cols, row)) for row in cur.fetchall()]
+
+
+def _freshness_badge(d: dict, days: int) -> str:
+    """Return 🆕 / 🔄 / '' based on scraped_at vs last_changed_at."""
+    now = datetime.now(timezone.utc)
+    cutoff = timedelta(days=days)
+    scraped = d.get("scraped_at")
+    changed = d.get("last_changed_at")
+    if scraped and (now - scraped) <= cutoff:
+        return " 🆕"
+    if changed and (now - changed) <= cutoff and scraped and (now - scraped) > cutoff:
+        return " 🔄"
+    return ""
 
 
 def semantic_search(query: str, limit: int = 10, category: str | None = None, region: str | None = None):
@@ -481,11 +495,15 @@ with tab_brief:
             st.subheader(f"{CATEGORY_HE.get(cat, cat)} ({len(items)})")
             for d in items:
                 reg_he = REGION_HE.get(d["region"] or "", d["region"] or "—")
-                with st.expander(f"[{reg_he}] {d['title']}"):
+                badge = _freshness_badge(d, days)
+                with st.expander(f"[{reg_he}] {d['title']}{badge}"):
                     if d.get("why_care"):
                         st.markdown(f"**למה זה חשוב:** {d['why_care']}")
                     st.write(d.get("summary") or "_(אין סיכום)_")
-                    st.caption(f"מקור: {d['source']} | נאסף: {d['scraped_at']:%Y-%m-%d}")
+                    meta_bits = [f"מקור: {d['source']}", f"נאסף: {d['scraped_at']:%Y-%m-%d}"]
+                    if d.get("last_changed_at") and d.get("scraped_at") and d["last_changed_at"] > d["scraped_at"]:
+                        meta_bits.append(f"עודכן: {d['last_changed_at']:%Y-%m-%d}")
+                    st.caption(" | ".join(meta_bits))
                     if d.get("url"):
                         st.markdown(f"[פתח מקור]({d['url']})")
 
