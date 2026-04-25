@@ -119,7 +119,7 @@ def main() -> int:
                     conn.rollback()
                     traceback.print_exc()
                     errors += 1
-            print(f"  → new={src_inserted} changed={src_updated} unchanged={src_unchanged}")
+            print(f"  -> new={src_inserted} changed={src_updated} unchanged={src_unchanged}")
     finally:
         conn.close()
 
