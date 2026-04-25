@@ -1,8 +1,11 @@
 name: Weekly scrape
 
+# Sunday auto-cron disabled while we evaluate. Trigger manually:
+#   - From GitHub UI: Actions tab -> "Weekly scrape" -> "Run workflow"
+#   - To re-enable, uncomment the schedule block below.
 on:
-  schedule:
-    - cron: '0 22 * * 0'   # Sundays 22:00 UTC
+  # schedule:
+  #   - cron: '0 22 * * 0'   # Sundays 22:00 UTC
   workflow_dispatch:
 
 jobs:

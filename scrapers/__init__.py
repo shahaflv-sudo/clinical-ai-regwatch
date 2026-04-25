@@ -1,6 +1,7 @@
 from .fda import FDAScraper
 from .moh_il import MOHIsraelScraper
 from .generic import GenericListScraper
+from .rss import RSSScraper
 
 AI_KW = [
     "artificial intelligence", "machine learning", "ai/ml", "ai-enabled",
@@ -74,4 +75,11 @@ ALL_SCRAPERS = [
     EMAScraper,
     StanfordAIMIScraper,
     MGBAimScraper,
+    # Journal RSS feeds — filtered to AI-relevant items via title/summary keywords
+    RSSScraper("nejm",            "Global", "https://www.nejm.org/action/showFeed?type=etoc&feed=rss&jc=nejm"),
+    RSSScraper("jama",            "Global", "https://jamanetwork.com/rss/site_3/67.xml"),
+    RSSScraper("lancet_digital",  "Global", "https://www.thelancet.com/rssfeed/landig_current.xml", keyword_filter=False),  # whole journal is digital health
+    RSSScraper("lancet",          "Global", "https://www.thelancet.com/rssfeed/lancet_current.xml"),
+    RSSScraper("npj_digital_med", "Global", "https://www.nature.com/npjdigitalmed.rss", keyword_filter=False),  # whole journal is digital medicine
+    RSSScraper("health_affairs",  "US",     "https://www.healthaffairs.org/action/showFeed?type=etoc&feed=rss&jc=hlthaff"),
 ]

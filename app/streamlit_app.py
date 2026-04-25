@@ -201,6 +201,12 @@ SOURCE_LABELS = {
     "stanford_aimi": "Stanford AIMI",
     "mgb_aim": "MGB AiM (Mass General Brigham)",
     "moh_il": "משרד הבריאות (ישראל)",
+    "nejm":            "NEJM",
+    "jama":            "JAMA",
+    "lancet":          "The Lancet",
+    "lancet_digital":  "The Lancet Digital Health",
+    "npj_digital_med": "npj Digital Medicine",
+    "health_affairs":  "Health Affairs",
 }
 
 DEFAULT_DRAFT_PROMPT = """אתה מנסח נוהל פנימי עבור מרכז ה-AI במרכז רפואי גדול.
